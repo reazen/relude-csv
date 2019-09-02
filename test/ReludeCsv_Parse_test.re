@@ -71,12 +71,11 @@ describe("Parse record", () => {
   module Record = ReludeCsv.Parse.Record;
 
   test("one record, simple fields", () =>
-    expect(Record.parseDefault("aaa,bbb"))
-    |> toEqual(Result.ok(["aaa", "bbb"]))
+    expect(Record.parse("aaa,bbb")) |> toEqual(Result.ok(["aaa", "bbb"]))
   );
 
   test("stops at newline", () =>
-    expect(Record.parseDefault("aaa,bbb\nccc,ddd"))
+    expect(Record.parse("aaa,bbb\nccc,ddd"))
     |> toEqual(Result.ok(["aaa", "bbb"]))
   );
 
@@ -84,9 +83,14 @@ describe("Parse record", () => {
     expect(Record.parseWithOptions(~delimiters=[";"], "aaa;bbb"))
     |> toEqual(Result.ok(["aaa", "bbb"]))
   );
+
+  test("allows fields to have quoted newlines", () =>
+    expect(Record.parse("\"aaa\nbbb\",ccc\nddd,eee"))
+    |> toEqual(Result.ok(["aaa\nbbb", "ccc"]))
+  );
 });
 
-Skip.describe("Parse CSV", () => {
+describe("Parse CSV", () => {
   let parse = ReludeCsv.Parse.parse;
 
   // TODO: maybe at least one record is required?
@@ -95,10 +99,7 @@ Skip.describe("Parse CSV", () => {
   );
 
   test("Simple fields, two records", () =>
-    expect(
-      parse("aaa,bbb\nccc,ddd")
-      |> Result.map(List.map(List.toArray) >> List.toArray),
-    )
-    |> toEqual(Result.ok([|[|"aaa", "bbb"|], [|"ccc", "ddd"|]|]))
+    expect(parse("aaa,bbb\nccc,ddd"))
+    |> toEqual(Result.ok([["aaa", "bbb"], ["ccc", "ddd"]]))
   );
 });

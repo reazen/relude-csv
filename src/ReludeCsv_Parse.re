@@ -63,16 +63,22 @@ module Record = {
       )
     );
 
-  let parseWithOptions = (~delimiters=?, ~trim=?, ~newLines=?, str) =>
-    Parser.runParser(str, makeParser(~delimiters?, ~trim?, ~newLines?, ()));
+  let parseWithOptions = (~quote=?, ~delimiters=?, ~trim=?, ~newLines=?, str) =>
+    Parser.runParser(
+      str,
+      makeParser(~quote?, ~delimiters?, ~trim?, ~newLines?, ()),
+    );
 
-  let parseDefault = str => parseWithOptions(str);
+  let parse = str => parseWithOptions(str);
 };
 
-let makeParser = (~delimiters=?, ~trim=?, ~newLines=?, ()) =>
-  Parser.manyUntil(
-    Parser.eof,
-    Record.makeParser(~delimiters?, ~trim?, ~newLines?, ()),
+let makeParser =
+    (~quote=?, ~delimiters=?, ~trim=?, ~newLines=defaultNewLines, ()) =>
+  Parser.(
+    sepBy(
+      anyOfStr(newLines),
+      Record.makeParser(~quote?, ~delimiters?, ~trim?, ~newLines, ()),
+    )
   );
 
 let defaultParser = makeParser();
