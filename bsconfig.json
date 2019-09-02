@@ -1,0 +1,34 @@
+{
+  "name": "relude-csv",
+  "bsc-flags": [],
+  "sources": [
+    {
+      "dir": "src",
+      "subdirs": true
+    },
+    {
+      "dir": "test",
+      "subdirs": true,
+      "type": "dev"
+    }
+  ],
+  "package-specs": {
+    "module": "commonjs",
+    "in-source": false
+  },
+  "suffix": ".bs.js",
+  "bs-dependencies": [
+    "bs-abstract",
+    "relude",
+    "relude-parse"
+  ],
+  "bs-dev-dependencies": [
+    "@glennsl/bs-jest"
+  ],
+  "warnings": {
+    "number": "+A-4-40-42",
+    "error": "+A"
+  },
+  "namespace": false,
+  "refmt": 3
+}

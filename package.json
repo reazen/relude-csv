@@ -1,0 +1,53 @@
+{
+  "name": "relude-csv",
+  "version": "0.1.0",
+  "description": "Parse CSV strings in ReasonML",
+  "main": "index.js",
+  "scripts": {
+    "build": "bsb -make-world",
+    "clean": "bsb -clean-world",
+    "cleanbuild": "npm run clean && npm run build",
+    "test": "jest --coverage",
+    "cleantest": "npm run clean && npm run build && npm run test",
+    "coveralls": "cat ./coverage/lcov.info | coveralls || true",
+    "watch": "bsb -make-world -w",
+    "start": "npm run watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/reazen/relude-csv.git"
+  },
+  "keywords": [
+    "reason",
+    "bucklscript",
+    "parse",
+    "csv",
+    "comma-separated values"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/reazen/relude-csv/issues"
+  },
+  "homepage": "https://github.com/reazen/relude-csv#readme",
+  "peerDependencies": {
+    "bs-abstract": "^0.17.0",
+    "relude": "^0.27.0",
+    "relude-parse": "^0.5.0"
+  },
+  "devDependencies": {
+    "@glennsl/bs-jest": "^0.4.9",
+    "bs-abstract": "^0.17.0",
+    "bs-platform": "^5.0.6",
+    "relude": "^0.27.0",
+    "relude-parse": "^0.5.0"
+  },
+  "jest": {
+    "coveragePathIgnorePatterns": [
+      "./test"
+    ],
+    "testMatch": [
+      "**/test/*.js"
+    ]
+  }
+}
