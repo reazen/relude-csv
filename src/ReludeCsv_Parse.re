@@ -23,6 +23,8 @@ module Field = {
 
     let unquoted =
       Parser.(
+        // also doesn't work?
+        // manyUntil(anyOfStr(terminators) |> map(ignore) <|> eof, anyChar)
         many(anyCharNotIn(terminators))
         |> map(List.String.join)
         |> map(trim ? String.trim : id)
@@ -82,5 +84,11 @@ let makeParser =
   );
 
 let defaultParser = makeParser();
+
+let parseWithOptions = (~quote=?, ~delimiters=?, ~trim=?, ~newLines=?, str) =>
+  Parser.runParser(
+    str,
+    makeParser(~quote?, ~delimiters?, ~trim?, ~newLines?, ()),
+  );
 
 let parse = Parser.runParser(_, defaultParser);

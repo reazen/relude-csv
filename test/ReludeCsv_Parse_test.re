@@ -2,7 +2,48 @@ open Jest;
 open Expect;
 open Relude.Globals;
 
-describe("Parse field", () => {
+describe("Parser playground", () => {
+  open ReludeParse;
+  let run = Parser.runParser;
+
+  let endOfField =
+    Parser.(anyOfStr([",", "\r\n", "\n"]) |> map(ignore) <|> eof);
+
+  let unquoted =
+    Parser.(manyUntil(endOfField, anyChar) |> map(List.String.join));
+
+  let record = Parser.(sepBy(str(","), unquoted));
+
+  test("unquoted, single field", () =>
+    expect(run("aaa", unquoted)) |> toEqual(Result.ok("aaa"))
+  );
+
+  test("unquoted, first of two fields", () =>
+    expect(run("aaa,bbb", unquoted)) |> toEqual(Result.ok("aaa"))
+  );
+
+  test("unquoted, two separated by newline", () =>
+    expect(run("aaa\nbbb", unquoted)) |> toEqual(Result.ok("aaa"))
+  );
+
+  test("unquoted, two separated by crlf newline", () =>
+    expect(run("aaa\r\nbbb", unquoted)) |> toEqual(Result.ok("aaa"))
+  );
+
+  test("record, one field", () =>
+    expect(run("aaa", record)) |> toEqual(Result.ok(["aaa"]))
+  );
+
+  test("record, two fields", () =>
+    expect(run("aaa,bbb", record)) |> toEqual(Result.ok(["aaa", "bbb"]))
+  );
+
+  test("record, two separated by newline", () =>
+    expect(run("aaa\r\nbbb", record)) |> toEqual(Result.ok(["aaa"]))
+  );
+});
+
+Skip.describe("Parse field", () => {
   module Field = ReludeCsv.Parse.Field;
 
   test("one field", () =>
@@ -65,9 +106,13 @@ describe("Parse field", () => {
     expect(Field.parseWithOptions(~quote="\'", "\"aaa\""))
     |> toEqual(Result.ok("\"aaa\""))
   );
+
+  test("parse complex newline", () =>
+    expect(Field.parse("aaa\r\nbbb")) |> toEqual(Result.ok("aaa"))
+  );
 });
 
-describe("Parse record", () => {
+Skip.describe("Parse record", () => {
   module Record = ReludeCsv.Parse.Record;
 
   test("one record, simple fields", () =>
@@ -88,9 +133,14 @@ describe("Parse record", () => {
     expect(Record.parse("\"aaa\nbbb\",ccc\nddd,eee"))
     |> toEqual(Result.ok(["aaa\nbbb", "ccc"]))
   );
+
+  test("parse complex newline", () =>
+    expect(Record.parse("aaa,bbb\r\nyyy,zzz") |> Result.map(List.toArray))
+    |> toEqual(Result.ok([|"aaa", "bbb"|]))
+  );
 });
 
-describe("Parse CSV", () => {
+Skip.describe("Parse CSV", () => {
   let parse = ReludeCsv.Parse.parse;
 
   // TODO: maybe at least one record is required?
@@ -98,8 +148,13 @@ describe("Parse CSV", () => {
     expect(parse("")) |> toEqual(Result.ok([[]]))
   );
 
-  test("Simple fields, two records", () =>
+  test("simple fields, two records", () =>
     expect(parse("aaa,bbb\nccc,ddd"))
     |> toEqual(Result.ok([["aaa", "bbb"], ["ccc", "ddd"]]))
+  );
+
+  test("trailing newline is allowed", () =>
+    expect(parse("aaa,bbb\r\nyyy,zzz"))
+    |> toEqual(Result.ok([["aaa", "bbb"], ["yyy", "zzz"]]))
   );
 });
