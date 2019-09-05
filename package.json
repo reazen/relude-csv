@@ -33,14 +33,14 @@
   "peerDependencies": {
     "bs-abstract": "^0.17.0",
     "relude": "^0.27.0",
-    "relude-parse": "^0.5.0"
+    "relude-parse": "^0.6.0"
   },
   "devDependencies": {
     "@glennsl/bs-jest": "^0.4.9",
     "bs-abstract": "^0.17.0",
     "bs-platform": "^5.0.6",
     "relude": "^0.27.0",
-    "relude-parse": "^0.5.0"
+    "relude-parse": "^0.6.0"
   },
   "jest": {
     "coveragePathIgnorePatterns": [

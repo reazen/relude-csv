@@ -2,48 +2,25 @@ open Jest;
 open Expect;
 open Relude.Globals;
 
-describe("Parser playground", () => {
+describe("playground", () => {
   open ReludeParse;
-  let run = Parser.runParser;
+  let newlineEof = Parser.(str("\n") *> eof);
+  let maybeChar =
+    Parser.(many(anyCharNotIn(["\n"])) |> map(List.String.join));
+  let withoutLastNewline =
+    Parser.(sepByOptEnd(str("\n"), peekNot(eof) *> maybeChar));
 
-  let endOfField =
-    Parser.(anyOfStr([",", "\r\n", "\n"]) |> map(ignore) <|> eof);
-
-  let unquoted =
-    Parser.(manyUntil(endOfField, anyChar) |> map(List.String.join));
-
-  let record = Parser.(sepBy(str(","), unquoted));
-
-  test("unquoted, single field", () =>
-    expect(run("aaa", unquoted)) |> toEqual(Result.ok("aaa"))
+  test("should match?", () =>
+    expect(runParser("\n", newlineEof)) |> toEqual(Result.ok())
   );
 
-  test("unquoted, first of two fields", () =>
-    expect(run("aaa,bbb", unquoted)) |> toEqual(Result.ok("aaa"))
-  );
-
-  test("unquoted, two separated by newline", () =>
-    expect(run("aaa\nbbb", unquoted)) |> toEqual(Result.ok("aaa"))
-  );
-
-  test("unquoted, two separated by crlf newline", () =>
-    expect(run("aaa\r\nbbb", unquoted)) |> toEqual(Result.ok("aaa"))
-  );
-
-  test("record, one field", () =>
-    expect(run("aaa", record)) |> toEqual(Result.ok(["aaa"]))
-  );
-
-  test("record, two fields", () =>
-    expect(run("aaa,bbb", record)) |> toEqual(Result.ok(["aaa", "bbb"]))
-  );
-
-  test("record, two separated by newline", () =>
-    expect(run("aaa\r\nbbb", record)) |> toEqual(Result.ok(["aaa"]))
+  test("discard final newline", () =>
+    expect(runParser("a\nb\nc\n", withoutLastNewline))
+    |> toEqual(Result.ok(["a", "b", "c"]))
   );
 });
 
-Skip.describe("Parse field", () => {
+describe("Parse field", () => {
   module Field = ReludeCsv.Parse.Field;
 
   test("one field", () =>
@@ -112,7 +89,7 @@ Skip.describe("Parse field", () => {
   );
 });
 
-Skip.describe("Parse record", () => {
+describe("Parse record", () => {
   module Record = ReludeCsv.Parse.Record;
 
   test("one record, simple fields", () =>
@@ -140,10 +117,11 @@ Skip.describe("Parse record", () => {
   );
 });
 
-Skip.describe("Parse CSV", () => {
+describe("Parse CSV", () => {
   let parse = ReludeCsv.Parse.parse;
 
-  // TODO: maybe at least one record is required?
+  // TODO: i have absolutely no idea what we should do here...
+  // is this a CSV with zero rows? one row with zero cells?
   Skip.test("empty", () =>
     expect(parse("")) |> toEqual(Result.ok([[]]))
   );
@@ -153,8 +131,12 @@ Skip.describe("Parse CSV", () => {
     |> toEqual(Result.ok([["aaa", "bbb"], ["ccc", "ddd"]]))
   );
 
-  test("trailing newline is allowed", () =>
+  test("multi-char newline", () =>
     expect(parse("aaa,bbb\r\nyyy,zzz"))
     |> toEqual(Result.ok([["aaa", "bbb"], ["yyy", "zzz"]]))
+  );
+
+  test("trailing newline discarded", () =>
+    expect(parse("aaa\n")) |> toEqual(Result.ok([["aaa"]]))
   );
 });

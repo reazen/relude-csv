@@ -1,13 +1,14 @@
 open Relude.Globals;
 open ReludeParse;
 
+let defaultQuote = "\"";
 let defaultDelimiters = [","];
 let defaultNewLines = ["\r\n", "\n"];
 
 module Field = {
   let makeParser =
       (
-        ~quote="\"",
+        ~quote=defaultQuote,
         ~delimiters=defaultDelimiters,
         ~trim=false,
         ~newLines=defaultNewLines,
@@ -16,26 +17,16 @@ module Field = {
     let terminators = List.concat(delimiters, newLines);
     let quoted =
       Parser.(
-        str(quote)
-        *> manyUntil(str(quote), anyChar)
+        between(str(quote), str(quote), many(anyCharNotIn([quote])))
         |> map(List.String.join)
       );
 
     let unquoted =
       Parser.(
-        // also doesn't work?
-        // manyUntil(anyOfStr(terminators) |> map(ignore) <|> eof, anyChar)
-        many(anyCharNotIn(terminators))
+        manyUntilPeek(anyOfStr(terminators) |> orEOF, anyChar)
         |> map(List.String.join)
         |> map(trim ? String.trim : id)
       );
-
-    // TODO: seems like this should work, but it doesn't
-    // let quoted =
-    //   Parser.(
-    //     between(str(quote), str(quote), many(anyChar))
-    //     |> map(List.String.join)
-    //   );
 
     Parser.(quoted <|> unquoted);
   };
@@ -59,10 +50,11 @@ module Record = {
         (),
       ) =>
     Parser.(
-      sepBy(
-        anyOfStr(delimiters),
-        Field.makeParser(~quote?, ~delimiters, ~trim?, ~newLines, ()),
-      )
+      peekNot(eof)
+      *> sepBy(
+           anyOfStr(delimiters),
+           Field.makeParser(~quote?, ~delimiters, ~trim?, ~newLines, ()),
+         )
     );
 
   let parseWithOptions = (~quote=?, ~delimiters=?, ~trim=?, ~newLines=?, str) =>
@@ -77,7 +69,7 @@ module Record = {
 let makeParser =
     (~quote=?, ~delimiters=?, ~trim=?, ~newLines=defaultNewLines, ()) =>
   Parser.(
-    sepBy(
+    sepByOptEnd(
       anyOfStr(newLines),
       Record.makeParser(~quote?, ~delimiters?, ~trim?, ~newLines, ()),
     )
