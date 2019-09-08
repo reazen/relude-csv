@@ -2,6 +2,8 @@ open Jest;
 open Expect;
 open Relude.Globals;
 
+let parseError = str => ReludeParse.Parser.ParseError.ParseError(str);
+
 describe("playground", () => {
   open ReludeParse;
   let newlineEof = Parser.(str("\n") *> eof);
@@ -115,6 +117,21 @@ describe("Parse record", () => {
     expect(Record.parse("aaa,bbb\r\nyyy,zzz") |> Result.map(List.toArray))
     |> toEqual(Result.ok([|"aaa", "bbb"|]))
   );
+
+  test("required number of fields (fail: too few)", () =>
+    expect(Record.parseWithOptions(~size=3, "aaa,bbb"))
+    |> toEqual(Result.error(parseError("Expected record size: 3")))
+  );
+
+  test("required number of fields (fail: too many)", () =>
+    expect(Record.parseWithOptions(~size=1, "aaa,bbb"))
+    |> toEqual(Result.error(parseError("Expected record size: 1")))
+  );
+
+  test("required number of fields (success)", () =>
+    expect(Record.parseWithOptions(~size=1, "aaa"))
+    |> toEqual(Result.ok(["aaa"]))
+  );
 });
 
 describe("Parse CSV", () => {
@@ -124,6 +141,10 @@ describe("Parse CSV", () => {
   // is this a CSV with zero rows? one row with zero cells?
   Skip.test("empty", () =>
     expect(parse("")) |> toEqual(Result.ok([[]]))
+  );
+
+  test("simple fields, one record", () =>
+    expect(parse("aaa,bbb")) |> toEqual(Result.ok([["aaa", "bbb"]]))
   );
 
   test("simple fields, two records", () =>
@@ -138,5 +159,20 @@ describe("Parse CSV", () => {
 
   test("trailing newline discarded", () =>
     expect(parse("aaa\n")) |> toEqual(Result.ok([["aaa"]]))
+  );
+
+  test("final newline discarded (multiple newlines)", () =>
+    expect(parse("aaa\n\n\n"))
+    |> toEqual(Result.ok([["aaa"], [""], [""]]))
+  );
+
+  test("size of second row is greater than first", () =>
+    expect(parse("aaa,bbb\r\nccc,ddd,eee"))
+    |> toEqual(Result.error(parseError("Expected record size: 2")))
+  );
+
+  test("size of second row is less than first", () =>
+    expect(parse("aaa,bbb\r\naaa\r\nccc,ddd\r\nddd,eee,fff,ggg"))
+    |> toEqual(Result.error(parseError("Expected record size: 2")))
   );
 });
