@@ -2,6 +2,7 @@ open Relude.Globals;
 open ReludeParse;
 
 let defaultQuote = "\"";
+let defaultEscapes = ["\""];
 let defaultDelimiters = [","];
 let defaultNewLines = ["\r\n", "\n"];
 
@@ -9,15 +10,21 @@ module Field = {
   let makeParser =
       (
         ~quote=defaultQuote,
+        ~escapes=defaultEscapes,
         ~delimiters=defaultDelimiters,
         ~trim=false,
         ~newLines=defaultNewLines,
         (),
       ) => {
     let terminators = List.concat(delimiters, newLines);
+    let escapedQuote = Parser.(tries(anyOfStr(escapes) *> str(quote)));
     let quoted =
       Parser.(
-        between(str(quote), str(quote), many(anyCharNotIn([quote])))
+        between(
+          str(quote),
+          str(quote),
+          many(escapedQuote <|> anyCharNotIn([quote])),
+        )
         |> map(List.String.join)
       );
 
@@ -31,8 +38,10 @@ module Field = {
     Parser.(quoted <|> unquoted);
   };
 
-  let parseWithOptions = (~quote=?, ~delimiters=?, ~trim=?, ~newLines=?, str) => {
-    let parser = makeParser(~quote?, ~delimiters?, ~trim?, ~newLines?, ());
+  let parseWithOptions =
+      (~escapes=?, ~quote=?, ~delimiters=?, ~trim=?, ~newLines=?, str) => {
+    let parser =
+      makeParser(~escapes?, ~quote?, ~delimiters?, ~trim?, ~newLines?, ());
     runParser(str, parser);
   };
 
@@ -43,13 +52,22 @@ module Record = {
   let makeParser =
       (
         ~size=?,
+        ~escapes=?,
         ~quote=?,
         ~delimiters=defaultDelimiters,
         ~trim=?,
         ~newLines=defaultNewLines,
         (),
       ) => {
-    let field = Field.makeParser(~quote?, ~delimiters, ~trim?, ~newLines, ());
+    let field =
+      Field.makeParser(
+        ~escapes?,
+        ~quote?,
+        ~delimiters,
+        ~trim?,
+        ~newLines,
+        (),
+      );
     let checkSize = fields =>
       Option.fold(true, Int.eq(List.length(fields)), size);
 
@@ -73,8 +91,16 @@ module Record = {
 };
 
 let makeParser =
-    (~quote=?, ~delimiters=?, ~trim=?, ~newLines=defaultNewLines, ()) => {
-  let record = Record.makeParser(~quote?, ~delimiters?, ~trim?, ~newLines);
+    (
+      ~escapes=?,
+      ~quote=?,
+      ~delimiters=?,
+      ~trim=?,
+      ~newLines=defaultNewLines,
+      (),
+    ) => {
+  let record =
+    Record.makeParser(~escapes?, ~quote?, ~delimiters?, ~trim?, ~newLines);
 
   Parser.(
     record()
@@ -96,8 +122,10 @@ let makeParser =
 
 let defaultParser = makeParser();
 
-let parseWithOptions = (~quote=?, ~delimiters=?, ~trim=?, ~newLines=?, str) => {
-  let parser = makeParser(~quote?, ~delimiters?, ~trim?, ~newLines?, ());
+let parseWithOptions =
+    (~escapes=?, ~quote=?, ~delimiters=?, ~trim=?, ~newLines=?, str) => {
+  let parser =
+    makeParser(~escapes?, ~quote?, ~delimiters?, ~trim?, ~newLines?, ());
   runParser(str, parser);
 };
 

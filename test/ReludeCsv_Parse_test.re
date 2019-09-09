@@ -6,19 +6,26 @@ let parseError = str => ReludeParse.Parser.ParseError.ParseError(str);
 
 describe("playground", () => {
   open ReludeParse;
-  let newlineEof = Parser.(str("\n") *> eof);
-  let maybeChar =
-    Parser.(many(anyCharNotIn(["\n"])) |> map(List.String.join));
-  let withoutLastNewline =
-    Parser.(sepByOptEnd(str("\n"), peekNot(eof) *> maybeChar));
 
-  test("should match?", () =>
-    expect(runParser("\n", newlineEof)) |> toEqual(Result.ok())
+  let escapes = ["a"];
+  let quote = "a";
+  let escapedQuote = Parser.(tries(anyOfStr(escapes) *> str(quote)));
+
+  let parser =
+    Parser.(
+      between(
+        str(quote),
+        str(quote),
+        many(escapedQuote <|> notChar(quote)) |> map(List.String.join),
+      )
+    );
+
+  test("between, escaped", () =>
+    expect(runParser("aaaa", parser)) |> toEqual(Result.ok("a"))
   );
 
-  test("discard final newline", () =>
-    expect(runParser("a\nb\nc\n", withoutLastNewline))
-    |> toEqual(Result.ok(["a", "b", "c"]))
+  test("between, empty", () =>
+    expect(runParser("aa", parser)) |> toEqual(Result.ok(""))
   );
 });
 
@@ -88,6 +95,16 @@ describe("Parse field", () => {
 
   test("parse complex newline", () =>
     expect(Field.parse("aaa\r\nbbb")) |> toEqual(Result.ok("aaa"))
+  );
+
+  test("parse escaped quotes", () =>
+    expect(Field.parse("\"She said, \"\"Hello, world\"\"\""))
+    |> toEqual(Result.ok("She said, \"Hello, world\""))
+  );
+
+  test("parse escaped quote (custom escape)", () =>
+    expect(Field.parseWithOptions(~escapes=["\\"], "\"a\\\"a\""))
+    |> toEqual(Result.ok("a\"a"))
   );
 });
 
