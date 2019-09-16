@@ -38,14 +38,11 @@ module Field = {
     Parser.(quoted <|> unquoted);
   };
 
-  let parseWithOptions =
-      (~escapes=?, ~quote=?, ~delimiters=?, ~trim=?, ~newLines=?, str) => {
+  let parse = (~escapes=?, ~quote=?, ~delimiters=?, ~trim=?, ~newLines=?, str) => {
     let parser =
       makeParser(~escapes?, ~quote?, ~delimiters?, ~trim?, ~newLines?, ());
     runParser(str, parser);
   };
-
-  let parse = str => parseWithOptions(str);
 };
 
 module Record = {
@@ -80,14 +77,11 @@ module Record = {
     );
   };
 
-  let parseWithOptions =
-      (~size=?, ~quote=?, ~delimiters=?, ~trim=?, ~newLines=?, str) => {
+  let parse = (~size=?, ~quote=?, ~delimiters=?, ~trim=?, ~newLines=?, str) => {
     let parser =
       makeParser(~size?, ~quote?, ~delimiters?, ~trim?, ~newLines?, ());
     runParser(str, parser);
   };
-
-  let parse = str => parseWithOptions(str);
 };
 
 let makeParser =
@@ -122,11 +116,8 @@ let makeParser =
 
 let defaultParser = makeParser();
 
-let parseWithOptions =
-    (~escapes=?, ~quote=?, ~delimiters=?, ~trim=?, ~newLines=?, str) => {
+let parse = (~escapes=?, ~quote=?, ~delimiters=?, ~trim=?, ~newLines=?, str) => {
   let parser =
     makeParser(~escapes?, ~quote?, ~delimiters?, ~trim?, ~newLines?, ());
   runParser(str, parser);
 };
-
-let parse = Parser.runParser(_, defaultParser);

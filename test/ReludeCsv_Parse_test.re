@@ -30,7 +30,7 @@ describe("playground", () => {
 });
 
 describe("Parse field", () => {
-  module Field = ReludeCsv.Parse.Field;
+  module Field = ReludeCsv.Field;
 
   test("one field", () =>
     expect(Field.parse("aaa")) |> toEqual(Result.ok("aaa"))
@@ -49,7 +49,7 @@ describe("Parse field", () => {
   );
 
   test("stop at custom delimiter", () =>
-    expect(Field.parseWithOptions(~delimiters=[";"], "aaa,bbb;ccc"))
+    expect(Field.parse(~delimiters=[";"], "aaa,bbb;ccc"))
     |> toEqual(Result.ok("aaa,bbb"))
   );
 
@@ -62,7 +62,7 @@ describe("Parse field", () => {
   );
 
   test("quoted can contain custom delimiter", () =>
-    expect(Field.parseWithOptions(~delimiters=["\t"], "\"a\ta\""))
+    expect(Field.parse(~delimiters=["\t"], "\"a\ta\""))
     |> toEqual(Result.ok("a\ta"))
   );
 
@@ -75,7 +75,7 @@ describe("Parse field", () => {
   );
 
   test("whitespace can be trimmed (optionally)", () =>
-    expect(Field.parseWithOptions(~trim=true, "\t\taaa  ,"))
+    expect(Field.parse(~trim=true, "\t\taaa  ,"))
     |> toEqual(Result.ok("aaa"))
   );
 
@@ -84,12 +84,12 @@ describe("Parse field", () => {
   );
 
   test("Quote value can be changed", () =>
-    expect(Field.parseWithOptions(~quote="\'", "\'aaa\nbbb\'"))
+    expect(Field.parse(~quote="\'", "\'aaa\nbbb\'"))
     |> toEqual(Result.ok("aaa\nbbb"))
   );
 
   test("Regular quotes aren't ignored when quote is changed", () =>
-    expect(Field.parseWithOptions(~quote="\'", "\"aaa\""))
+    expect(Field.parse(~quote="\'", "\"aaa\""))
     |> toEqual(Result.ok("\"aaa\""))
   );
 
@@ -103,13 +103,13 @@ describe("Parse field", () => {
   );
 
   test("parse escaped quote (custom escape)", () =>
-    expect(Field.parseWithOptions(~escapes=["\\"], "\"a\\\"a\""))
+    expect(Field.parse(~escapes=["\\"], "\"a\\\"a\""))
     |> toEqual(Result.ok("a\"a"))
   );
 });
 
 describe("Parse record", () => {
-  module Record = ReludeCsv.Parse.Record;
+  module Record = ReludeCsv.Record;
 
   test("one record, simple fields", () =>
     expect(Record.parse("aaa,bbb")) |> toEqual(Result.ok(["aaa", "bbb"]))
@@ -121,7 +121,7 @@ describe("Parse record", () => {
   );
 
   test("custom delimiter", () =>
-    expect(Record.parseWithOptions(~delimiters=[";"], "aaa;bbb"))
+    expect(Record.parse(~delimiters=[";"], "aaa;bbb"))
     |> toEqual(Result.ok(["aaa", "bbb"]))
   );
 
@@ -136,23 +136,22 @@ describe("Parse record", () => {
   );
 
   test("required number of fields (fail: too few)", () =>
-    expect(Record.parseWithOptions(~size=3, "aaa,bbb"))
+    expect(Record.parse(~size=3, "aaa,bbb"))
     |> toEqual(Result.error(parseError("Expected record size: 3")))
   );
 
   test("required number of fields (fail: too many)", () =>
-    expect(Record.parseWithOptions(~size=1, "aaa,bbb"))
+    expect(Record.parse(~size=1, "aaa,bbb"))
     |> toEqual(Result.error(parseError("Expected record size: 1")))
   );
 
   test("required number of fields (success)", () =>
-    expect(Record.parseWithOptions(~size=1, "aaa"))
-    |> toEqual(Result.ok(["aaa"]))
+    expect(Record.parse(~size=1, "aaa")) |> toEqual(Result.ok(["aaa"]))
   );
 });
 
 describe("Parse CSV", () => {
-  let parse = ReludeCsv.Parse.parse;
+  let parse = ReludeCsv.parse;
 
   // TODO: i have absolutely no idea what we should do here...
   // is this a CSV with zero rows? one row with zero cells?

@@ -34,17 +34,17 @@ But long before you run out of memory, you'll probably run out of stack space be
 `ReludeCSV.Parse` includes a `parser` which is a `ReludeParse.Parser.t(list(string))` that you can easily compose with other parsers. More likely, however, you'll just want to parse a string directly:
 
 ```reason
-ReludeCSV.Parse.parse("aaa,bbb\nddd,eee") == Ok([["aaa", "bbb"], ["ccc", "ddd"]]);
+ReludeCSV.parse("aaa,bbb\nddd,eee") == Ok([["aaa", "bbb"], ["ccc", "ddd"]]);
 ```
 
 Additionally, you can build and run a customized parser using the configurations mentioned above:
 
 ```reason
-ReludeCSV.Parse.parseWithOptions(~trim=true, "aaa, bbb") == Ok(["aaa", "bbb"]);
+ReludeCSV.parse(~trim=true, "aaa, bbb") == Ok(["aaa", "bbb"]);
 ```
 
 Given an invalid CSV, parsers will fail with a `Belt.Result.Error(ParseError.t)`. Actual error content could be much improved to give you more information about what went wrong:
 
 ```reason
-ReludeCSV.Parse.parse("aaa,bbb\nccc") == Error(ParseError("Expected record size: 2"));
+ReludeCSV.parse("aaa,bbb\nccc") == Error(ParseError("Expected record size: 2"));
 ```
