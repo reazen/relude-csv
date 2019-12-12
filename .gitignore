@@ -15,4 +15,4 @@ npm-debug.log
 *.orig
 
 # Generated project files
-/coverage
+/docs/coverage

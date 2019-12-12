@@ -1,5 +1,9 @@
 # Relude CSV
 
+[![GitHub CI](https://img.shields.io/github/workflow/status/reazen/relude-csv/CI/master)](https://github.com/reazen/relude-csv/actions)
+[![npm](https://img.shields.io/npm/v/relude-csv.svg)](https://www.npmjs.com/package/relude-csv)
+[![Coveralls](https://img.shields.io/coveralls/github/reazen/relude-csv.svg)](https://coveralls.io/github/reazen/relude-csv) 
+
 Parse strings of CSV data into a structured `list(list(string))`, using the parsing tools in [Relude Parse](https://github.com/reazen/relude-parse).
 
 ## Features
