@@ -18,7 +18,7 @@
   },
   "suffix": ".bs.js",
   "bs-dependencies": [
-    "bs-abstract",
+    "bs-bastet",
     "relude",
     "relude-parse"
   ],
